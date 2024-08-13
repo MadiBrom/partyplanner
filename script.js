@@ -6,8 +6,8 @@ const state = {
 };
 
 const partyList = document.querySelector("#party-list");
-const addPartyForm = document.querySelector("#addParty");
-addPartyForm.addEventListener("submit", addParty);
+const addParty = document.querySelector("#addParty");
+addParty.addEventListener("submit", addingParty);
 
 async function render() {
   await getParties();
@@ -25,15 +25,15 @@ async function getParties() {
   }
 }
 
-async function addParty(event) {
+async function addingParty(event) {
   event.preventDefault();
 
   await createParty(
-    addPartyForm.name.value,
-    addPartyForm.date.value,
-    addPartyForm.time.value,
-    addPartyForm.location.value,
-    addPartyForm.description.value
+    addParty.name.value,
+    addParty.date.value,
+    addParty.time.value,
+    addParty.location.value,
+    addParty.description.value
   );
 }
 
@@ -83,4 +83,30 @@ async function updateParties(id, name, date, time, location, description) {
   } catch (error) {
     console.log(error);
   }
+}
+
+function renderParties() {
+  if (!state.parties.length) {
+    partyList.innerHTML = `<li>No parties found.</li>`;
+    return;
+  }
+  const invites = state.parties.map((party) => {
+    const invite = document.createElement("li");
+    invite.classList.add("party");
+    invite.innerHTML = `
+        <input>${party.name}</input>
+        <input>${party.date}</input>
+        <input>${party.time}</input>
+        <input>${party.location}</input>
+        <input>${party.description}</input>
+      `;
+    const deleteButton = document.createElement("button");
+    deleteButton.textContent = "Delete Party";
+    invite.append(deleteButton);
+
+    deleteButton.addEventListener("click", () => deleteRecipe(recipe.id));
+
+    return recipeCard;
+  });
+  recipesList.replaceChildren(...recipeCards);
 }
