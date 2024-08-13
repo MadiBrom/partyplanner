@@ -1,13 +1,13 @@
 const COHORT = "2407-FTB-ET-WEB-FT";
-const apiURL = `https://fsa-crud-2aa9294fe819.herokuapp.com/api/${COHORT}/events`;
+const API_URL = `https://fsa-crud-2aa9294fe819.herokuapp.com/api/${COHORT}/events`;
 
 const state = {
   parties: [],
 };
 
 const partyList = document.querySelector("#party-list");
-const addParty = document.querySelector("#addParty");
-addParty.addEventListener("submit", addingParty);
+const addPartyForm = document.getElementById("addParty");
+addPartyForm.addEventListener("submit", AddParty);
 
 async function render() {
   await getParties();
@@ -17,7 +17,10 @@ render();
 
 async function getParties() {
   try {
-    const response = await fetch(apiURL);
+    const response = await fetch(API_URL);
+    if (!response.ok) {
+      throw new Error("Failed to fetch parties.");
+    }
     const json = await response.json();
     state.parties = json.data;
   } catch (error) {
@@ -25,29 +28,29 @@ async function getParties() {
   }
 }
 
-async function addingParty(event) {
+async function AddParty(event) {
   event.preventDefault();
+  const name = addPartyForm.name.value;
+  const date = addPartyForm.date.value;
+  const time = addPartyForm.time.value;
+  const location = addPartyForm.location.value;
+  const description = addPartyForm.description.value;
 
-  await createParty(
-    addParty.name.value,
-    addParty.date.value,
-    addParty.time.value,
-    addParty.location.value,
-    addParty.description.value
-  );
+  await createParty(name, date, time, location, description);
+  addPartyForm.reset();
 }
 
 async function createParty(name, date, time, location, description) {
   try {
-    const response = await fetch(apiURL, {
+    console.log({ name, date, time, location, description });
+    const response = await fetch(API_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         name,
-        date,
-        time,
+        date: new Date(date),
         location,
         description,
       }),
@@ -56,29 +59,7 @@ async function createParty(name, date, time, location, description) {
     if (response.ok) {
       render();
     } else {
-      console.error("fail!");
-    }
-  } catch (error) {
-    console.log(error);
-  }
-}
-
-async function updateParties(id, name, date, time, location, description) {
-  try {
-    const response = await fetch(`${apiURL}/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name,
-        date,
-        time,
-        location,
-        description,
-      }),
-    });
-
-    if (!response.ok) {
-      console.error("fail!");
+      console.error("Failed to create party.");
     }
   } catch (error) {
     console.log(error);
@@ -94,19 +75,36 @@ function renderParties() {
     const invite = document.createElement("li");
     invite.classList.add("party");
     invite.innerHTML = `
-        <input>${party.name}</input>
-        <input>${party.date}</input>
-        <input>${party.time}</input>
-        <input>${party.location}</input>
-        <input>${party.description}</input>
+        <h2>${party.name}</h2>
+        <p>${party.date}</p>
+        <p>${party.time}</p>
+        <p>${party.location}</p>
+        <p>${party.description}</p>
       `;
     const deleteButton = document.createElement("button");
     deleteButton.textContent = "Delete Party";
     invite.append(deleteButton);
 
-    deleteButton.addEventListener("click", () => deleteRecipe(recipe.id));
+    deleteButton.addEventListener("click", () => deleteParty(party.id));
 
-    return recipeCard;
+    async function deleteParty(id) {
+      try {
+        const response = await fetch(`${API_URL}/${id}`, {
+          method: "DELETE",
+        });
+
+        if (response.ok) {
+          // Re-render parties after successful deletion
+          render();
+        } else {
+          console.error("Failed to delete party.");
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
+    return invite;
   });
-  recipesList.replaceChildren(...recipeCards);
+  partyList.replaceChildren(...invites);
 }
